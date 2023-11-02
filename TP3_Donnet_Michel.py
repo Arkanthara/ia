@@ -16,6 +16,9 @@ class Morpion:
         self.grid = np.zeros((self.shape, self.shape), int)
         self.computer = True
         self.computer_symbol = 1
+        self.user_symbol = 2
+        self.computer_win = 0
+        self.user_win = 0
     
     def __str__(self):
         n = self.shape
@@ -31,16 +34,54 @@ class Morpion:
             result += "\n"
         return result
 
-    def list_possibilities(self) -> list[np.ndarray]:
+    def win(self, current) -> int:
+        for i in {1, 2}:
+            for i in range(self.shape):
+                if current[i, 0] == current[i, 1] == current[i, 2]
+                or current[0, i] == current[1, i] == current[2, i]
+                or current[0, 0] == current[1, 1] == current[2, 2]
+                    or current[2, 0] == current[1, 1] == current[0, 2]: return i
+        return 0
+
+
+    def list_possibilities(self, current: np.ndarray) -> list[np.ndarray]:
         result = []
         if self.computer:
             for i in range(self.shape):
                 for j in range(self.shape):
-                    if self.grid[i, j] == 0:
-                        newgrid = deepcopy(self.grid)
+                    if current[i, j] == 0:
+                        newgrid = deepcopy(current)
                         newgrid[i, j] = self.computer_symbol
                         result.append(newgrid)
+        else:
+            for i in range(self.shape):
+                for j in range(self.shape):
+                    if current[i, j] == 0:
+                        newgrid = deepcopy(current)
+                        newgrid[i, j] = self.user_symbol
+                        result.append(newgrid)
         return result
+
+    def chance_to_win(self, current: np.ndarray) -> int:
+        match self.win(current):
+            case self.computer_symbol:
+                self.computer_win += 1
+                break
+            case self.user_symbol:
+                self.user_win += 1
+                break
+            case 0:
+                possibilities = self.list_possibilities(current)
+                for i in possibilities:
+                    self.next_choice(i)
+            case _:
+                break
+        return 0
+
+    def next_choice(self):
+        possibilities = self.list_possibilities(self.grid)
+        
+
 
     def place_element(self, i: int, j: int, k: int) -> int:
         if self.grid[i, j] != 0:
