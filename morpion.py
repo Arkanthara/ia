@@ -317,26 +317,56 @@ class Morpion:
         elif win == self.user_symbol: 
             table[index] -= 1
 
+    def bfs(self, current: np.ndarray, path: int):
+        if self.win(current) != 0:
+            return self.win(current), path
+        possibilities = self.list_possibilities(current)
+        table = np.zeros(len(possibilities))
+        for i in possibilities:
+            win, path = self.bfs(i, path + 1)
+            if win == self.user_symbol:
+                table.append(-path)
+            elif win == self.computer_symbol:
+                table.append(path)
+        return 
+
+
+#    def play_computer(self):
+#        if self.computer:
+#            if not self.next_choice_critical():
+#                possibilities = self.list_possibilities(self.grid)
+#                table = np.zeros(len(possibilities))
+#                print(table)
+#                for i in range(len(possibilities)):
+#                    if self.win(possibilities[i]) == self.computer_symbol:
+#                        self.grid = possibilities[i]
+#                        return
+#                    self.next_choice(possibilities[i], table, i)
+#                max_path = table[0]
+#                print(table)
+#                index = 0
+#                for i in range(len(possibilities)):
+#                    print(i)
+#                    if table[i] > max_path:
+#                        max_path = table[i]
+#                        index = i
+#                self.grid = possibilities[index]
+
+    
     def play_computer(self):
         if self.computer:
-            if not self.next_choice_critical():
-                possibilities = self.list_possibilities(self.grid)
-                table = np.zeros(len(possibilities))
-                print(table)
-                for i in range(len(possibilities)):
-                    if self.win(possibilities[i]) == self.computer_symbol:
-                        self.grid = possibilities[i]
-                        return
-                    self.next_choice(possibilities[i], table, i)
-                max_path = table[0]
-                print(table)
-                index = 0
-                for i in range(len(possibilities)):
-                    print(i)
-                    if table[i] > max_path:
-                        max_path = table[i]
-                        index = i
-                self.grid = possibilities[index]
+            table = self.bfs(self.grid, 0)
+            possibilities = self.list_possibilities(self.grid)
+            minimum = 1000000
+            index = 0
+            for i in range(len(table)):
+                if table[i] > 0 and table[i] < minimum:
+                    minimum = table[i]
+                    index = i
+            print(index)
+            self.grid = possibilities[index]
+
+
 
     def play_user(self):
         print("row (choose a number in {0, 1, 2})")
@@ -359,6 +389,7 @@ class Morpion:
             print(f"You can't place 'x' at index ({i}, {j}) !")
             return -1
         self.grid[i, j] = self.user_symbol
+        #self.grid[i, j] = k
         return 0
 
 
@@ -366,3 +397,9 @@ class Morpion:
 
 morpion = Morpion()
 morpion.play()
+#morpion.place_element(1, 1, 1)
+#morpion.place_element(1, 0, 2)
+#morpion.place_element(2, 1, 1)
+#morpion.place_element(0, 1, 2)
+#print(morpion)
+#print(morpion.bfs(morpion.grid, 0))
