@@ -321,14 +321,21 @@ class Morpion:
         if self.win(current) != 0:
             return self.win(current), path
         possibilities = self.list_possibilities(current)
-        table = np.zeros(len(possibilities))
-        for i in possibilities:
-            win, path = self.bfs(i, path + 1)
-            if win == self.user_symbol:
-                table.append(-path)
-            elif win == self.computer_symbol:
-                table.append(path)
-        return 
+        if len(possibilities) != 0:
+            win_2, path_2 = self.bfs(possibilities[0], path + 1)
+            win_2_2, path_2_2 = self.bfs(possibilities[0], path + 1)
+            for i in possibilities:
+                win, path = self.bfs(i, path + 1)
+            if win == self.user_symbol and path_2_2 > path:
+                path_2_2 = path
+                win_2 = win
+            elif win == self.computer_symbol and path_2 > path:
+                path_2 = path
+                win_2 = win
+            if path_2_2 < path_2:
+                return win_2_2, path_2 + 10
+            return win_2, path_2
+        return 0, 100
 
 
 #    def play_computer(self):
