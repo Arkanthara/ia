@@ -98,6 +98,43 @@ def verification(otello: np.ndarray, x: int, y: int, item: bool, diag: bool = Fa
             return True
     return False
 
+def update_otello(otello: np.ndarray, x: int, y: int, item: bool, diag: bool = False) -> bool:
+    indice = 0
+    mylist = []
+    offset = x - y
+
+    # Get the line to verify
+    if diag:
+        mylist = np.diagonal(otello, offset)
+        indice = y - np.abs(offset)
+    else:
+        mylist = otello[x, :]
+        indice = y
+
+    # Calculate index of 
+    if indice < 0:
+        indice += len(mylist)
+
+    for i in range(1, len(mylist) - indice):
+        if mylist[indice + i] == None:
+            break
+        if mylist[indice + i] is item and i > 1:
+            for j in range(i):
+                mylist[indice + i - j] = item
+            break
+    for i in range(1, indice):
+        if mylist[indice - i] == None:
+            break
+        if mylist[indice - i] is item and i > 1:
+            for j in range(i):
+                mylist[indice - i + j] = item
+            break
+    if diag:
+        print("TODO")
+    else:
+        print(mylist)
+        otello[x, :] = mylist
+    return otello
 # print(verification([[True, None True], [False, True, False]], 
     
 def is_possible(otello: np.ndarray, x: int, y: int, item: bool) -> bool:
@@ -114,12 +151,14 @@ def is_possible(otello: np.ndarray, x: int, y: int, item: bool) -> bool:
             or verification(rotate_otello, w, z, item)
             or verification(rotate_otello, w, z, item, True))
 
+
 def place_element(otello: np.ndarray, x: int, y: int, item: bool) -> np.ndarray:
     if is_possible(otello, x, y, item):
         print("It's possible")
+        otello[x, y] = item
+        otello = update_otello(otello, x, y, item)
     else:
         print("It's not possible")
-    otello[x, y] = item
     return otello
 otello = init_otello()
 print_otello(otello)
