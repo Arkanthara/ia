@@ -182,10 +182,14 @@ def play_otello():
 def minmax(otello: np.ndarray, path: int, Max_depth: int, item: bool, Max: bool) -> int:
     possibilities = list_possibilities(otello, item)
     if len(possibilities) == 0:
-        if win_otello(otello) == item: return 1
-        else: return -1
+        if Max:
+            if win_otello(otello) == item: return 1
+            else return -1
+        else:
+            if win_otello(otello) == item: return -1
+            else return 1
     evaluation = np.zeros(len(possibilities))
-    if path < Max_depth:
+    if path <= Max_depth:
         for i in range(len(possibilities)):
             x, y = possibilities[i]
             newotello = place_element(otello.copy(), x, y, item)
@@ -203,14 +207,21 @@ def play_minmax(otello: np.ndarray, max_depth, item) -> np.ndarray:
     for i in range(len(possibilities)):
         x, y = possibilities[i]
         newotello = place_element(otello.copy(), x, y, item)
-        evaluation[i] = minmax(newotello, 1, max_depth, item, True)
+        evaluation[i] = minmax(newotello, 1, max_depth, not item, False)
     x, y = possibilities[evaluation.index(max(evaluation))]
     return place_element(otello, x, y, item)
     
 def play_otello_minmax(max_depth: int, mode: bool = True):
     if mode:
         otello = init_otello()
-        item = False
+        print("Do you want to start ?")
+        begin = input("('y' or 'n'. Default: 'y'): ")
+        match begin:
+            case 'n':
+                item = True
+            case _:
+                item = False
+ 
         print_otello(otello)
         possibilities = list_possibilities(otello, item)
         while len(possibilities) != 0:
@@ -239,9 +250,4 @@ def play_otello_minmax(max_depth: int, mode: bool = True):
 
 
 play_otello_minmax(3)
-
-# a = np.arange(16).reshape(4, 4)
-# print(a)
-# print(np.diagonal(a, -1))
-# print(insert_diag(a, np.diagonal(a, -1), -1))
 

@@ -50,11 +50,6 @@ def list_possibilities(morpion: np.ndarray, item: bool) -> list[tuple[int, int]]
     for i in range(3):
         for j in range(3):
             if is_possible(morpion, i, j, item):
-                # morpion[i, j] = not item
-                # if win_morpion(morpion) != None:
-                #     morpion[i, j] = None
-                #     return [(i, j)]
-                # morpion[i, j] = None
                 result.append((i, j))
     return result
 
@@ -119,14 +114,19 @@ def play_minmax(morpion: np.ndarray, max_depth, item) -> np.ndarray:
         newmorpion = place_element(morpion.copy(), x, y, item)
         evaluation[i] = minmax(newmorpion, 1, max_depth, not item, False)
     x, y = possibilities[evaluation.index(max(evaluation))]
-    print(evaluation)
     return place_element(morpion, x, y, item)
  
 
 def play_morpion_minmax(max_depth: int, mode: bool = True):
     if mode:
         morpion = init_morpion()
-        item = False
+        print("Do you want to start ?")
+        begin = input("('y' or 'n'. Default: 'y'): ")
+        match begin:
+            case 'n':
+                item = True
+            case _:
+                item = False
         print_morpion(morpion)
         possibilities = list_possibilities(morpion, item)
         while win_morpion(morpion) == None and len(possibilities) != 0:
@@ -159,4 +159,44 @@ def play_morpion_minmax(max_depth: int, mode: bool = True):
 
 
 
-play_morpion_minmax(2)
+def play_morpion_minmaxvsminmax(max_depth_1: int, max_depth_2: int):
+    morpion = init_morpion()
+    item = True
+    possibilities = list_possibilities(morpion, item)
+    while win_morpion(morpion) == None and len(possibilities) != 0:
+        if item:
+            morpion = play_minmax(morpion, max_depth_1, item)
+            item = not item
+        else:
+            morpion = play_minmax(morpion, max_depth_2, item)
+            item = not item
+        possibilities = list_possibilities(morpion, item)
+    if win_morpion(morpion):
+        return 1
+    elif win_morpion(morpion) != None:
+        return 2
+    else:
+        return 0
+
+def variation_depth_minmax(size: int):
+    grid_variation_depth = np.zeros((size + 1, size + 1))
+    for i in range(size + 1):
+        for j in range(size + 1):
+            grid_variation_depth[i, j] = play_morpion_minmaxvsminmax(i, j)
+    result = "Variation of depth of MinMax for max depth of " + str(size) + ":\n"
+    result += "grid[i, j] = 1: minmax of depth i win\ngrid[i, j] = 2: minmax of depth j win\ngrid[i, j] = 0: nobody win\n"
+    result += "i alway start\n"
+    result += "   "
+    for i in range(size + 1):
+        result += " " + str(i) + " "
+    result += "\n"
+    for i in range(size + 1):
+        result +=" " + str(i) + " "
+        for j in range(size + 1):
+            result +=" " + str(int(grid_variation_depth[i, j])) + " "
+        result += "\n"
+    print(result)
+
+play_morpion_minmaxvsminmax(5, 5)
+
+variation_depth_minmax(5)
