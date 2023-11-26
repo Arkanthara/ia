@@ -72,44 +72,69 @@ def rotate_indices(x: int, y: int, size: int = 8):
 def verification(otello: np.ndarray, x: int, y: int, item: bool, diag: bool = False) -> bool:
     indice = 0
     mylist = []
-    offset = x - y
+    offset = y - x
 
     # Get the line to verify
     if diag:
         mylist = np.diagonal(otello, offset)
-        indice = y - np.abs(offset)
+        if offset < 0:
+            indice = x + offset
+        else:
+            indice = y - offset
     else:
         mylist = otello[x, :]
         indice = y
 
-    # Calculate index of 
-    if indice < 0:
-        indice += len(mylist)
-
+    # Browse in one direction if we meet other item
     for i in range(1, len(mylist) - indice):
         if mylist[indice + i] == None:
             break
+        if mylist[indice + i] is item and i == 1:
+            break
         if mylist[indice + i] is item and i > 1:
             return True
+    # Browse in the other direction if we meet an item
     for i in range(1, indice):
         if mylist[indice - i] == None:
+            break
+        if mylist[indice - i] is item and i == 1:
             break
         if mylist[indice - i] is item and i > 1:
             return True
     return False
 
-def update_otello(otello: np.ndarray, x: int, y: int, item: bool, diag: bool = False) -> bool:
+def insert_diag(otello: np.ndarray, mylist, offset: int) -> np.ndarray:
+    if offset < 0:
+        for i in range(len(mylist)):
+            otello[i - offset, i] = mylist[i]
+    else:
+        for i in range(len(mylist)):
+            otello[i, i + offset] = mylist[i]
+    return otello
+
+def update_otello(otello: np.ndarray, x: int, y: int, item: bool, diag: bool = False) -> np.ndarray:
     indice = 0
     mylist = []
-    offset = x - y
+    offset = y - x
+    print(offset)
 
     # Get the line to verify
+    # Get the line to verify
     if diag:
-        mylist = np.diagonal(otello, offset)
-        indice = y - np.abs(offset)
+        mylist = list(np.diagonal(otello, offset))
+        if offset < 0:
+            indice = x + offset
+        else:
+            indice = y - offset
     else:
-        mylist = otello[x, :]
+        mylist = list(otello[x, :])
         indice = y
+    #if diag:
+    #    mylist = np.diagonal(otello, offset)
+    #    indice = y - np.abs(offset)
+    #else:
+    #    mylist = otello[x, :]
+    #    indice = y
 
     # Calculate index of 
     if indice < 0:
@@ -130,41 +155,87 @@ def update_otello(otello: np.ndarray, x: int, y: int, item: bool, diag: bool = F
                 mylist[indice - i + j] = item
             break
     if diag:
-        print("TODO")
+        otello = insert_diag(otello, mylist, offset)
     else:
-        print(mylist)
         otello[x, :] = mylist
     return otello
 # print(verification([[True, None True], [False, True, False]], 
     
 def is_possible(otello: np.ndarray, x: int, y: int, item: bool) -> bool:
-    a = np.arange(16).reshape(4, 4);
-    offset = x - y
-    diag_1 = np.diagonal(a, offset)
-    indice = y - np.abs(offset)
     if otello[x, y] != None:
         return False
-    rotate_otello = np.rot90(otello)
+    rotate_otello = np.rot90(otello.copy())
     w, z = rotate_indices(x, y)
-    return (verification(otello, x, y, item)
-            or verification(otello, x, y, item, True)
-            or verification(rotate_otello, w, z, item)
-            or verification(rotate_otello, w, z, item, True))
+    if verification(otello, x, y, item) or verification(otello, x, y, item, True):
+        return True
+    otello = np.rot90(otello, 1)
+    if verification(otello, w, z, item) or verification(otello, w, z, item, True):
+        otello = np.rot90(otello, -1)
+        return True
+    return False
 
 
 def place_element(otello: np.ndarray, x: int, y: int, item: bool) -> np.ndarray:
     if is_possible(otello, x, y, item):
         print("It's possible")
         otello[x, y] = item
+        w, z = rotate_indices(x, y)
         otello = update_otello(otello, x, y, item)
+        otello = update_otello(otello, x, y, item, True)
+        otello = np.rot90(otello, 1)
+        otello = update_otello(otello, w, z, item)
+        otello = update_otello(otello, w, z, item, True)
+        otello = np.rot90(otello, -1)
     else:
         print("It's not possible")
     return otello
-otello = init_otello()
-print_otello(otello)
+
+def win_otello(otello: np.ndarray) -> bool:
+    # Count number of True
+    player_1 = len(otello[otello == True])
+    # Count number of False.
+    player_2 = len(otello[otello == False])
+    # Return the winner
+    if player_1 > player_2: return True
+    return False
+
+def list_possibilities(otello: np.ndarray, item: bool) -> list[tuple[int, int]]:
+    result = []
+    for i in np.arange(8):
+        for j in np.arange(8):
+            if is_possible(otello, i, j, item):
+                result.append((i, j))
+    return result
+
+def play_otello():
+    otello = init_otello()
+    item = False
+    print_otello(otello)
+    possibilities = list_possibilities(otello, item)
+    while len(possibilities) != 0:
+        if item:
+            print("'x' must play")
+        else:
+            print("'o' must play")
+        possibilities = list_possibilities(otello, item)
+        print("Possibilities: " + str(possibilities))
+        x = int(input("Row: "))
+        y = int(input("Column: "))
+        if is_possible(otello, x, y, item):
+            otello = place_element(otello, x, y, item)
+            item = not item
+            print_otello(otello)
+    if win_otello(otello):
+        print("'x' win")
+    else:
+        print("'o' win")
 
 
-print(is_possible(otello, 3, 1, True))
 
-place_element(otello, 3, 2, True) 
-print_otello(otello)
+play_otello()
+
+# a = np.arange(16).reshape(4, 4)
+# print(a)
+# print(np.diagonal(a, -1))
+# print(insert_diag(a, np.diagonal(a, -1), -1))
+
