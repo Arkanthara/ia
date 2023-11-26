@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 
@@ -58,6 +59,7 @@ def place_element(morpion: np.ndarray, x: int, y: int, item: bool) -> np.ndarray
         morpion[x, y] = item
     return morpion
 
+# Play player versus player
 def play_morpion():
     morpion = init_morpion()
     item = False
@@ -103,7 +105,28 @@ def minmax(morpion: np.ndarray, path: int, max_depth: int, item: bool, Max: bool
             return np.max(evaluation)
         return np.min(evaluation)
     return 0
-         
+
+# Alpha minmax not tested...
+def alphaminmax(morpion: np.ndarray, path: int, max_depth: int, item: bool, Max: bool, alpha: int = -100, beta: int = 100) -> int:
+    possibilities = list_possibilities(morpion, item)
+    if Max:
+        if win_morpion(morpion) != None: return -1
+    else:
+        if win_morpion(morpion) != None: return 1
+    if len(possibilities) == 0: return 0
+    index_move = 0
+    if path <= max_depth:
+        for i in range(len(possibilities)):
+            x, y = possibilities[i]
+            newmorpion = place_element(morpion.copy(), x, y, item)
+            evaluation = alphaminmax(newmorpion, path + 1, max_depth, not item, not Max, -beta, -alpha)
+            if evaluation >= alpha:
+                alpha = evaluation
+                index_move = i
+                if alpha >= beta:
+                    break
+    return alpha
+
 def play_minmax(morpion: np.ndarray, max_depth, item) -> np.ndarray:
     possibilities = list_possibilities(morpion, item)
     if len(possibilities) == 0:
@@ -116,7 +139,7 @@ def play_minmax(morpion: np.ndarray, max_depth, item) -> np.ndarray:
     x, y = possibilities[evaluation.index(max(evaluation))]
     return place_element(morpion, x, y, item)
  
-
+# Play versus minmax
 def play_morpion_minmax(max_depth: int, mode: bool = True):
     if mode:
         morpion = init_morpion()
@@ -162,6 +185,7 @@ def play_morpion_minmax(max_depth: int, mode: bool = True):
 def play_morpion_minmaxvsminmax(max_depth_1: int, max_depth_2: int):
     morpion = init_morpion()
     item = True
+    number_of_moves = 0
     possibilities = list_possibilities(morpion, item)
     while win_morpion(morpion) == None and len(possibilities) != 0:
         if item:
@@ -170,19 +194,21 @@ def play_morpion_minmaxvsminmax(max_depth_1: int, max_depth_2: int):
         else:
             morpion = play_minmax(morpion, max_depth_2, item)
             item = not item
+        number_of_moves += 1
         possibilities = list_possibilities(morpion, item)
     if win_morpion(morpion):
-        return 1
+        return 1, number_of_moves
     elif win_morpion(morpion) != None:
-        return 2
+        return 2, number_of_moves
     else:
-        return 0
+        return 0, number_of_moves
 
 def variation_depth_minmax(size: int):
     grid_variation_depth = np.zeros((size + 1, size + 1))
+    number_of_moves = np.zeros((size + 1, size + 1))
     for i in range(size + 1):
         for j in range(size + 1):
-            grid_variation_depth[i, j] = play_morpion_minmaxvsminmax(i, j)
+            grid_variation_depth[i, j], number_of_moves[i, j] = play_morpion_minmaxvsminmax(i, j)
     result = "Variation of depth of MinMax for max depth of " + str(size) + ":\n"
     result += "grid[i, j] = 1: minmax of depth i win\ngrid[i, j] = 2: minmax of depth j win\ngrid[i, j] = 0: nobody win\n"
     result += "i alway start\n"
@@ -197,6 +223,29 @@ def variation_depth_minmax(size: int):
         result += "\n"
     print(result)
 
-play_morpion_minmaxvsminmax(5, 5)
+    average_number_of_moves = np.mean(number_of_moves, axis = 0) + np.mean(number_of_moves, axis = 1) / 2*(size + 1)
+    success = np.zeros(size + 1)
+    for i in range(size + 1):
+        for j in range(size + 1):
+            if grid_variation_depth[i, j] == 1:
+                success[i] += 1
+            if grid_variation_depth[i, j] == 2:
+                success[j] += 1
+    success /= size + 1 * size + 1
+    print("Success rate:")
+    for i in range(size + 1):
+        print("")
+        print(f"Depth {i}: {success[i]}")
+        print(f"Average number of moves: {average_number_of_moves[i]}")
+        print("")
+
+    x = [i for i in range(size + 1)]
+    plt.figure()
+    plt.title("success rate as a function of depth")
+    plt.plot(x, success)
+    plt.xlabel("Depth")
+    plt.ylabel("Success rate")
+    plt.legend()
+    plt.show()
 
 variation_depth_minmax(5)
