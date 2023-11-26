@@ -65,7 +65,6 @@ def print_otello(otello: np.ndarray):
 
 def rotate_indices(x: int, y: int, size: int = 8):
     w = np.abs(y - size + 1)
-    #z = np.abs(x - size + 1)
     z = x
     return w, z
 
@@ -94,7 +93,7 @@ def verification(otello: np.ndarray, x: int, y: int, item: bool, diag: bool = Fa
         if mylist[indice + i] is item and i > 1:
             return True
     # Browse in the other direction if we meet an item
-    for i in range(1, indice):
+    for i in range(1, indice + 1):
         if mylist[indice - i] == None:
             break
         if mylist[indice - i] is item and i == 1:
@@ -116,9 +115,7 @@ def update_otello(otello: np.ndarray, x: int, y: int, item: bool, diag: bool = F
     indice = 0
     mylist = []
     offset = y - x
-    print(offset)
 
-    # Get the line to verify
     # Get the line to verify
     if diag:
         mylist = list(np.diagonal(otello, offset))
@@ -129,26 +126,20 @@ def update_otello(otello: np.ndarray, x: int, y: int, item: bool, diag: bool = F
     else:
         mylist = list(otello[x, :])
         indice = y
-    #if diag:
-    #    mylist = np.diagonal(otello, offset)
-    #    indice = y - np.abs(offset)
-    #else:
-    #    mylist = otello[x, :]
-    #    indice = y
-
-    # Calculate index of 
-    if indice < 0:
-        indice += len(mylist)
-
     for i in range(1, len(mylist) - indice):
         if mylist[indice + i] == None:
+            break
+        if mylist[indice + i] is item and i == 1:
             break
         if mylist[indice + i] is item and i > 1:
             for j in range(i):
                 mylist[indice + i - j] = item
             break
-    for i in range(1, indice):
+    for i in range(1, indice + 1):
+        print(indice - i)
         if mylist[indice - i] == None:
+            break
+        if mylist[indice - i] is item and i == 1:
             break
         if mylist[indice - i] is item and i > 1:
             for j in range(i):
@@ -164,7 +155,6 @@ def update_otello(otello: np.ndarray, x: int, y: int, item: bool, diag: bool = F
 def is_possible(otello: np.ndarray, x: int, y: int, item: bool) -> bool:
     if otello[x, y] != None:
         return False
-    rotate_otello = np.rot90(otello.copy())
     w, z = rotate_indices(x, y)
     if verification(otello, x, y, item) or verification(otello, x, y, item, True):
         return True
@@ -172,6 +162,7 @@ def is_possible(otello: np.ndarray, x: int, y: int, item: bool) -> bool:
     if verification(otello, w, z, item) or verification(otello, w, z, item, True):
         otello = np.rot90(otello, -1)
         return True
+    otello = np.rot90(otello, -1)
     return False
 
 
@@ -219,12 +210,15 @@ def play_otello():
             print("'o' must play")
         possibilities = list_possibilities(otello, item)
         print("Possibilities: " + str(possibilities))
-        x = int(input("Row: "))
-        y = int(input("Column: "))
-        if is_possible(otello, x, y, item):
-            otello = place_element(otello, x, y, item)
-            item = not item
-            print_otello(otello)
+        try:
+            x = int(input("Row: "))
+            y = int(input("Column: "))
+            if is_possible(otello, x, y, item):
+                otello = place_element(otello, x, y, item)
+                item = not item
+                print_otello(otello)
+        except ValueError:
+            print("You must enter a digit !")
     if win_otello(otello):
         print("'x' win")
     else:
