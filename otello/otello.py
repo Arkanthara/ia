@@ -23,46 +23,6 @@ def print_otello(otello: np.ndarray):
         result += "\n"
     print(result)
 
-# def place_element(otello: np.ndarray, x: int, y: int, item: int) -> np.ndarray:
-#     if x > 8 or x < 1 or y > 8 or y < 1:
-#         print("Error: x and y must be in range [1, 8] !")
-#         return otello
-#     if otello[x, y] != 0:
-#         print("Error ! You can't place an element here !")
-#         return otello
-# 
-# def is_possible(otello: np.ndarray, x: int, y: int, item: bool) -> bool:
-#     if otello[x, y] != None:
-#         print("Error ! You can't place an element here !")
-#         return False
-#     enemy = not item
-#     print(enemy)
-#     match x:
-#         case 0:
-#             if otello[x + 1, y] == not item:
-#                 return True
-#             break
-#         case 7:
-#             if otello[x - 1, y] == not item:
-#                 return True
-#             break
-#         case _:
-#             if otello[x + 1, y] == not item or otello[x - 1, y] == not item:
-#                 return True
-#     match y:
-#         case 0:
-#             if otello[x, y + 1] == not item:
-#                 return True
-#             break
-#         case 7:
-#             if otello[x, y - 1] == not item:
-#                 return True
-#             break
-#         case _:
-#             if otello[x, y + 1] == not item or otello[x, y - 1] == not item:
-#                 return True
-
-
 def rotate_indices(x: int, y: int, size: int = 8):
     w = np.abs(y - size + 1)
     z = x
@@ -136,7 +96,6 @@ def update_otello(otello: np.ndarray, x: int, y: int, item: bool, diag: bool = F
                 mylist[indice + i - j] = item
             break
     for i in range(1, indice + 1):
-        print(indice - i)
         if mylist[indice - i] == None:
             break
         if mylist[indice - i] is item and i == 1:
@@ -150,7 +109,6 @@ def update_otello(otello: np.ndarray, x: int, y: int, item: bool, diag: bool = F
     else:
         otello[x, :] = mylist
     return otello
-# print(verification([[True, None True], [False, True, False]], 
     
 def is_possible(otello: np.ndarray, x: int, y: int, item: bool) -> bool:
     if otello[x, y] != None:
@@ -168,7 +126,6 @@ def is_possible(otello: np.ndarray, x: int, y: int, item: bool) -> bool:
 
 def place_element(otello: np.ndarray, x: int, y: int, item: bool) -> np.ndarray:
     if is_possible(otello, x, y, item):
-        print("It's possible")
         otello[x, y] = item
         w, z = rotate_indices(x, y)
         otello = update_otello(otello, x, y, item)
@@ -177,8 +134,6 @@ def place_element(otello: np.ndarray, x: int, y: int, item: bool) -> np.ndarray:
         otello = update_otello(otello, w, z, item)
         otello = update_otello(otello, w, z, item, True)
         otello = np.rot90(otello, -1)
-    else:
-        print("It's not possible")
     return otello
 
 def win_otello(otello: np.ndarray) -> bool:
@@ -224,9 +179,66 @@ def play_otello():
     else:
         print("'o' win")
 
+def minmax(otello: np.ndarray, path: int, Max_depth: int, item: bool, Max: bool) -> int:
+    possibilities = list_possibilities(otello, item)
+    if len(possibilities) == 0:
+        if win_otello(otello) == item: return 1
+        else: return -1
+    evaluation = np.zeros(len(possibilities))
+    if path < Max_depth:
+        for i in range(len(possibilities)):
+            x, y = possibilities[i]
+            newotello = place_element(otello.copy(), x, y, item)
+            evaluation[i] = minmax(newotello, path + 1, Max_depth, not item, not Max)
+        if Max:
+            return np.max(evaluation)
+        return np.min(evaluation)
+    return 0
+        
+def play_minmax(otello: np.ndarray, max_depth, item) -> np.ndarray:
+    possibilities = list_possibilities(otello, item)
+    if len(possibilities) == 0:
+        return otello
+    evaluation = np.zeros(len(possibilities)).tolist()
+    for i in range(len(possibilities)):
+        x, y = possibilities[i]
+        newotello = place_element(otello.copy(), x, y, item)
+        evaluation[i] = minmax(newotello, 1, max_depth, item, True)
+    x, y = possibilities[evaluation.index(max(evaluation))]
+    return place_element(otello, x, y, item)
+    
+def play_otello_minmax(max_depth: int, mode: bool = True):
+    if mode:
+        otello = init_otello()
+        item = False
+        print_otello(otello)
+        possibilities = list_possibilities(otello, item)
+        while len(possibilities) != 0:
+            if item:
+                print("'x' must play")
+                otello = play_minmax(otello, max_depth, item)
+                item = not item
+                print_otello(otello)
+            else:
+                print("'o' must play")
+                possibilities = list_possibilities(otello, item)
+                print("Possibilities: " + str(possibilities))
+                try:
+                    x = int(input("Row: "))
+                    y = int(input("Column: "))
+                    if is_possible(otello, x, y, item):
+                        otello = place_element(otello, x, y, item)
+                        item = not item
+                        print_otello(otello)
+                except ValueError:
+                    print("You must enter a digit !")
+        if win_otello(otello):
+            print("'x' win")
+        else:
+            print("'o' win")
 
 
-play_otello()
+play_otello_minmax(3)
 
 # a = np.arange(16).reshape(4, 4)
 # print(a)
