@@ -24,6 +24,10 @@ print(data)
 
 entropy = lambda x:  -x * np.log2(x)
 
-print(data[1:,-1])
+counter = lambda data, x, y: list(data[1:, y]).count(x)
 
-print(entropy(np.sum(np.array([int(i) for i in data[1:,-1]])) / (len(data) - 1) ))
+print(counter(data, '1', -1) / (len(data) - 1))
+
+#print(entropy(np.sum(np.array([int(i) for i in data[1:,-1]])) / (len(data) - 1) ))
+print(entropy(counter(data, '1', -1) / (len(data) - 1) ))
+print(entropy(counter(data, '0', -1) / (len(data) - 1) ))
