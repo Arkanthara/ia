@@ -24,7 +24,16 @@ print(data)
 
 entropy = lambda x:  -x * np.log2(x)
 
+def join_entropy(data, w, x, y, z):
+    return entropy(len(data[(data[:, w] == y) & (data[:, x] == z)]) / (len(data) - 1))
+
 counter = lambda data, x, y: list(data[1:, y]).count(x)
+
+conditionnal_entropy = lambda data, w, x, y, z: join_entropy(data, w, x, y, z) - entropy(counter(data, z, x) / (len(data) - 1))
+
+print(conditionnal_entropy(data, 1, 3, '1', '0'))
+
+print(join_entropy(data, 1, 3, '1', '0'))
 
 print(counter(data, '1', -1) / (len(data) - 1))
 
