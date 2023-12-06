@@ -18,25 +18,50 @@ reader = csv.reader(file)
 for row in reader:
     data.append(row)
 
-data = np.array(data)
+datacsv = np.array(data)
+data = datacsv[1:, :]
+header = datacsv[0, :]
 
-print(data)
 
-entropy = lambda x:  -x * np.log2(x)
+def entropy(data: np.ndarray, column: int) -> float:
+    values = np.unique(data[1:, column])
+    result = 0
+    for i in values:
+        nb = np.sum(data[1:, column] == i)
+        nb = nb / len(data)
+        result += -nb * np.log2(nb)
+    return result
 
-def join_entropy(data, w, x, y, z):
-    return entropy(len(data[(data[:, w] == y) & (data[:, x] == z)]) / (len(data) - 1))
+# H(column_1|column_2)
+def conditionnal_entropy(data: np.ndarray, column_1: int, column_2: int) -> float:
+    values = np.unique(data[1:, column_2])
+    result = 0
+    for i in values:
+        newdata = data[data[:, column_2] == i]
+        nb = len(newdata)
+        nb = nb / len(data)
+        result += nb * entropy(newdata, column_1)
+    return result
+# I(column_1; column_2)
+def mutual_information(data: np.ndarray, column_1: int, column_2: int) -> float:
+    return entropy(data, column_1) - conditionnal_entropy(data, column_1, column_2)
 
-counter = lambda data, x, y: list(data[1:, y]).count(x)
 
-conditionnal_entropy = lambda data, w, x, y, z: join_entropy(data, w, x, y, z) - entropy(counter(data, z, x) / (len(data) - 1))
+def gini(data: np.ndarray, column: int) -> float:
+    values = np.unique(data[1:, column])
+    result = 0
+    for i in values:
+        nb = np.sum(data[:, column] == i) / len(data)
+        result += nb * nb
+    return 1 - result
 
-print(conditionnal_entropy(data, 1, 3, '1', '0'))
+print(entropy(data, 5))
+print(conditionnal_entropy(data, 5, 3))
+print(mutual_information(data, 5, 3))
+print(gini(data, 5))
 
-print(join_entropy(data, 1, 3, '1', '0'))
 
-print(counter(data, '1', -1) / (len(data) - 1))
+def id3(data: np.ndarray):
+    print("Hellooooo !!!")
 
-#print(entropy(np.sum(np.array([int(i) for i in data[1:,-1]])) / (len(data) - 1) ))
-print(entropy(counter(data, '1', -1) / (len(data) - 1) ))
-print(entropy(counter(data, '0', -1) / (len(data) - 1) ))
+id3(data)
