@@ -115,7 +115,8 @@ print(id3(data, header, 5, True))
 tree = id3(data, header, 5)
 print(tree)
 
-def gen_data(tree):
+# Gen data thanks to a tree
+def gen_data(tree, item_unknow):
     data = {}
     mytree = tree
     while type(mytree) != int and len(list(mytree.keys())) != 0:
@@ -126,7 +127,54 @@ def gen_data(tree):
             randnumber = random.randint(0, len(keys) - 1)
             data[item] = keys[randnumber]
             mytree = mytree[keys[randnumber]]
+        else:
+            data[item_unknow] = mytree
+    if type(mytree) == int:
+        data[item_unknow] = mytree
+
     return data
 
+# Complete datas generated thanks to the tree
+def complete_gen_data(tree, item_unknow, header):
+    data = gen_data(tree, item_unknow)
+    keys = list(header.keys())
+    for i in keys:
+        if i not in data:
+            values = header[i]
+            random_number = random.randint(0, len(header[i]) - 1)
+            data[i] = values[random_number]
+    return data
+complete_header = {}
+for i in range(len(header)):
+    complete_header[header[i]] = np.unique(data[i])
 
-print(gen_data(tree))
+# Allow to generate multiple datas from a tree
+def gen_multiple_datas(tree, item_unknow, header, number):
+    result = []
+    keys = list(header.keys())
+    result.append(keys)
+    for i in range(number):
+        data = complete_gen_data(tree, item_unknow, header)
+        newdata = []
+        for j in range(len(keys)):
+            newdata.append(data[keys[j]])
+        result.append(newdata)
+    result = np.array(result)
+    return result
+
+
+print(gen_multiple_datas(tree, 'c', complete_header, 10))
+
+def get_percentage_of_data(data: np.ndarray, percentage: int):
+    indices = np.arange(len(data))
+    indices = np.unique((indices * percentage/100).round().astype(int))
+    newdata = data.copy()
+    np.random.shuffle(newdata)
+    return newdata[indices]
+
+list_tree = []
+for i in range(5):
+    list_tree.append(id3(get_percentage_of_data(data, 80), header, 5))
+for i in range(5):
+    print(list_tree[i])
+
