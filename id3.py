@@ -165,16 +165,22 @@ def gen_multiple_datas(tree, item_unknow, header, number):
 
 print(gen_multiple_datas(tree, 'c', complete_header, 10))
 
-def get_percentage_of_data(data: np.ndarray, percentage: int):
+def get_percentage_of_data(data: np.ndarray, percentage: int) -> np.ndarray:
     indices = np.arange(len(data))
     indices = np.unique((indices * percentage/100).round().astype(int))
+    last_indices = np.arange(len(data))
+    mask = np.isin(last_indices, indices).astype(int)
+    mask -= 1
+    mask[mask < 0] = 1
+    last_indices = np.unique(last_indices * mask).astype(int)
+    print(last_indices)
     newdata = data.copy()
     np.random.shuffle(newdata)
-    return newdata[indices]
+    return newdata[indices], newdata[last_indices[1:]]
 
 list_tree = []
 for i in range(5):
-    list_tree.append(id3(get_percentage_of_data(data, 80), header, 5))
+    list_tree.append(id3(get_percentage_of_data(data, 80)[0], header, 5))
 for i in range(5):
     print(list_tree[i])
 
