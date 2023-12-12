@@ -2,20 +2,20 @@ import csv
 import numpy as np
 import random
 
-file = open('data.csv', 'r')
-#with open('data.csv', 'r') as file:
 
-data = []
+def convert_csv2array(name: str) -> tuple[np.ndarray, np.ndarray]:
+    file = open(name, 'r')
+    data = []
+    reader = csv.reader(file)
+    for line in reader:
+        data.append(line)
+    data = np.array(data)
+    return data[0, :], data[1:, :]
 
-reader = csv.reader(file)
+header, data = convert_csv2array('data.csv')
+_, data_test = convert_csv2array('data_test.csv')
 
-for row in reader:
-    data.append(row)
-
-datacsv = np.array(data)
-data = datacsv[1:, :]
-header = datacsv[0, :]
-
+FN, FP, TN, TP = range(4)
 
 def entropy(data: np.ndarray, column: int) -> float:
     values, count = np.unique(data[:, column], return_counts=True)
@@ -173,14 +173,91 @@ def get_percentage_of_data(data: np.ndarray, percentage: int) -> np.ndarray:
     mask -= 1
     mask[mask < 0] = 1
     last_indices = np.unique(last_indices * mask).astype(int)
-    print(last_indices)
     newdata = data.copy()
     np.random.shuffle(newdata)
     return newdata[indices], newdata[last_indices[1:]]
 
-list_tree = []
+trees = []
+training = []
+test = []
 for i in range(5):
-    list_tree.append(id3(get_percentage_of_data(data, 80)[0], header, 5))
-for i in range(5):
-    print(list_tree[i])
+    data_training, data_test = get_percentage_of_data(data, 80)
+    training.append(data_training)
+    test.append(data_test)
+    trees.append(id3(data_training, header, 5))
 
+def eval(tree, data: np.ndarray, header: np.ndarray, target: int) -> int:
+    data = np.array(data).astype(int)
+    while type(tree) != int:
+        keys = list(tree.keys())
+        index = np.where(header == keys[0])[0][0]
+        tree = tree[header[index]]
+        keys = list(tree.keys())
+        if data[index] not in keys:
+            if data[target] == 0:
+                return TN
+            return FP
+        tree = tree[data[index]]
+    if data[target] == tree:
+        return TP
+    return FN
+
+
+def evaluation(tree, test: np.ndarray, header: np.ndarray, target: int):
+    n = len(test)
+    FN_count = 0
+    FP_count = 0
+    TN_count = 0
+    TP_count = 0
+    for i in test:
+        result = eval(tree, i, header, target)
+        if result == FN: FN_count += 1
+        if result == FP: FP_count += 1
+        if result == TN: TN_count += 1
+        if result == TP: TP_count += 1
+    return FN_count/n, FP_count/n, TN_count/n, TP_count/n
+
+print(evaluation(tree, data_test, header, 5))
+print(evaluation(tree, [[1, 1, 4, 0, 0, 1], [1, 2, 1, 3, 0, 1]], header, 5))
+
+def accuracy(tree, test: np.ndarray, header: np.ndarray, target: int) -> float:
+    fn, fp, tn, tp = evaluation(tree, test, header, target)
+    return (fp + fn)/(tp + tn + fp + fn)
+
+def precision(tree, test: np.ndarray, header: np.ndarray, target: int):
+    fn, fp, tn, tp = evaluation(tree, test, header, target)
+    return tp / (tp + fp), tp / (tp + fn)
+
+def f1_score(tree, test: np.ndarray, header: np.ndarray, target: int) -> float:
+    p, r = precision(tree, test, header, target)
+    return (2 * p * r) / (p + r)
+
+accuracy_target = accuracy(tree, data_test, header, 5)
+precision_target_p, precision_target_r = precision(tree, data_test, header, 5)
+f1_score_target = f1_score(tree, data_test, header, 5)
+
+average_accuracy = 0
+average_precision_p = 0
+average_precision_r = 0
+average_f1_score = 0
+for i in range(len(trees)):
+    average_accuracy += accuracy(trees[i], data_test, header, 5)
+    p, r = precision(trees[i], data_test, header, 5)
+    average_precision_p += p
+    average_precision_r += r
+    average_f1_score += f1_score(trees[i], data_test, header, 5)
+
+average_accuracy /= len(trees)
+average_precision_p /= len(trees)
+average_precision_r /= len(trees)
+average_f1_score /= len(trees)
+
+print("Tree")
+print("accuracy: " + str(accuracy_target))
+print("precision (p, r): (" + str(precision_target_p) + ", " + str(precision_target_r) + ")")
+print(f"F1 score: {f1_score_target}")
+
+print("Average")
+print(f"accuracy: {average_accuracy}")
+print(f"precision (p, r): ({average_precision_p}, {average_precision_r})")
+print(f"F1 score: {average_f1_score}")
