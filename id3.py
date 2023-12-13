@@ -10,10 +10,12 @@ def convert_csv2array(name: str) -> tuple[np.ndarray, np.ndarray]:
     for line in reader:
         data.append(line)
     data = np.array(data)
-    return data[0, :], data[1:, :]
+    return data[0, :], data[1:, :].astype(int)
 
 header, data = convert_csv2array('data.csv')
 _, data_test = convert_csv2array('data_test.csv')
+
+print(data_test)
 
 FN, FP, TN, TP = range(4)
 
@@ -181,9 +183,9 @@ trees = []
 training = []
 test = []
 for i in range(5):
-    data_training, data_test = get_percentage_of_data(data, 80)
+    data_training, data_tests = get_percentage_of_data(data, 80)
     training.append(data_training)
-    test.append(data_test)
+    test.append(data_tests)
     trees.append(id3(data_training, header, 5))
 
 def eval(mytree, data: np.ndarray, header: np.ndarray, target: int) -> int:
@@ -245,7 +247,7 @@ def precision(tree, test: np.ndarray, header: np.ndarray, target: int):
 def f1_score(tree, test: np.ndarray, header: np.ndarray, target: int) -> float:
     p, r = precision(tree, test, header, target)
     return (2 * p * r) / (p + r)
-
+'''
 accuracy_target = accuracy(tree, data_test, header, 5)
 precision_target_p, precision_target_r = precision(tree, data_test, header, 5)
 f1_score_target = f1_score(tree, data_test, header, 5)
@@ -275,3 +277,4 @@ print("Average")
 print(f"accuracy: {average_accuracy}")
 print(f"precision (p, r): ({average_precision_p}, {average_precision_r})")
 print(f"F1 score: {average_f1_score}")
+'''
