@@ -186,22 +186,35 @@ for i in range(5):
     test.append(data_test)
     trees.append(id3(data_training, header, 5))
 
-def eval(tree, data: np.ndarray, header: np.ndarray, target: int) -> int:
+def eval(mytree, data: np.ndarray, header: np.ndarray, target: int) -> int:
+    tree = mytree.copy()
     data = np.array(data).astype(int)
     while type(tree) != int:
         keys = list(tree.keys())
         index = np.where(header == keys[0])[0][0]
         tree = tree[header[index]]
         keys = list(tree.keys())
-        if data[index] not in keys:
-            if data[target] == 0:
-                return TN
-            return FP
+        # if data[index] not in keys:
+        #     if data[target] == 0:
+        #         return TN
+        #     return FP
         tree = tree[data[index]]
-    if data[target] == tree:
+    print(f"\nTree: {tree}")
+    print(f"Data: {data}")
+    if data[target] == 1 and tree == 1:
+        print("TP")
         return TP
-    return FN
+    if data[target] == 0 and tree == 1:
+        print("FN")
+        return FN
+    if data[target] == 0 and tree == 0:
+        print("TN")
+        return TN
+    if data[target] == 1 and tree == 0:
+        print("FP")
+        return FP
 
+# Comparer profondeur arbres....
 
 def evaluation(tree, test: np.ndarray, header: np.ndarray, target: int):
     n = len(test)
@@ -218,16 +231,17 @@ def evaluation(tree, test: np.ndarray, header: np.ndarray, target: int):
     return FN_count/n, FP_count/n, TN_count/n, TP_count/n
 
 print(evaluation(tree, data_test, header, 5))
-print(evaluation(tree, [[1, 1, 4, 0, 0, 1], [1, 2, 1, 3, 0, 1]], header, 5))
 
 def accuracy(tree, test: np.ndarray, header: np.ndarray, target: int) -> float:
     fn, fp, tn, tp = evaluation(tree, test, header, target)
+    print(evaluation(tree, test, header, target))
     return (fp + fn)/(tp + tn + fp + fn)
 
 def precision(tree, test: np.ndarray, header: np.ndarray, target: int):
     fn, fp, tn, tp = evaluation(tree, test, header, target)
     return tp / (tp + fp), tp / (tp + fn)
 
+# Moyenne de la moyenne des inverses...
 def f1_score(tree, test: np.ndarray, header: np.ndarray, target: int) -> float:
     p, r = precision(tree, test, header, target)
     return (2 * p * r) / (p + r)
