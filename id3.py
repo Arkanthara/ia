@@ -15,6 +15,7 @@ def convert_csv2array(name: str) -> tuple[np.ndarray, np.ndarray]:
 header, data = convert_csv2array('data.csv')
 _, data_test = convert_csv2array('data_test.csv')
 
+
 print(data_test)
 
 FN, FP, TN, TP = range(4)
@@ -196,24 +197,18 @@ def eval(mytree, data: np.ndarray, header: np.ndarray, target: int) -> int:
         index = np.where(header == keys[0])[0][0]
         tree = tree[header[index]]
         keys = list(tree.keys())
-        # if data[index] not in keys:
-        #     if data[target] == 0:
-        #         return TN
-        #     return FP
+        if data[index] not in keys:
+            if data[target] == 0:
+                return TN
+            return FP
         tree = tree[data[index]]
-    print(f"\nTree: {tree}")
-    print(f"Data: {data}")
     if data[target] == 1 and tree == 1:
-        print("TP")
         return TP
     if data[target] == 0 and tree == 1:
-        print("FN")
         return FN
     if data[target] == 0 and tree == 0:
-        print("TN")
         return TN
     if data[target] == 1 and tree == 0:
-        print("FP")
         return FP
 
 # Comparer profondeur arbres....
@@ -247,7 +242,7 @@ def precision(tree, test: np.ndarray, header: np.ndarray, target: int):
 def f1_score(tree, test: np.ndarray, header: np.ndarray, target: int) -> float:
     p, r = precision(tree, test, header, target)
     return (2 * p * r) / (p + r)
-'''
+
 accuracy_target = accuracy(tree, data_test, header, 5)
 precision_target_p, precision_target_r = precision(tree, data_test, header, 5)
 f1_score_target = f1_score(tree, data_test, header, 5)
@@ -277,4 +272,4 @@ print("Average")
 print(f"accuracy: {average_accuracy}")
 print(f"precision (p, r): ({average_precision_p}, {average_precision_r})")
 print(f"F1 score: {average_f1_score}")
-'''
+
