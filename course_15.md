@@ -1,0 +1,3 @@
+Il faut mesurer les conséquences potentielles de la technologie... Trouver le juste équilibre...
+
+Existance d'attributs protégés
