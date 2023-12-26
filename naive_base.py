@@ -35,8 +35,12 @@ def distrib_param(data: np.ndarray, header: np.ndarray, target: int):
             if j != target:
                 tmp_2 = {}
                 newvalues, count = np.unique(newdata[:, j], return_counts = True)
-                for k in range(len(newvalues)):
-                    tmp_2[newvalues[k]] = count[k] / len(newdata)
+                if len(newvalues) == 2:
+                    for k in range(len(newvalues)):
+                        tmp_2[newvalues[k]] = count[k] / len(newdata)
+                else:
+                    tmp_2["Mean"] = np.mean(newdata[:, j].astype(float))
+                    tmp_2["Variance"] = np.var(newdata[:, j].astype(float))
                 tmp[header[j]] = tmp_2
         result[values[i]] = tmp
     return result
