@@ -1,6 +1,6 @@
 import csv
 import numpy as np
-
+from scipy.stats import norm
 
 def convert_csv2array(name: str) -> tuple[np.ndarray, np.ndarray]:
     file = open(name, 'r')
@@ -47,3 +47,30 @@ def distrib_param(data: np.ndarray, header: np.ndarray, target: int):
 
 
 print(distrib_param(data, header, 3))
+
+def naive_base(distrib: dict, header: np.ndarray, data: np.ndarray):
+    values_keys = list(distrib.keys())
+    maximum = 0
+    value = values_keys[0]
+    for i in values_keys:
+        denom = 1
+        for j in range(len(header)):
+            if list(distrib[i][header[j]].keys())[0] == "Mean" or list(distrib[i][header[j]].keys())[1] == "Mean":
+                denom *= norm.cdf(float(data[j]), distrib[i][header[j]]["Mean"], distrib[i][header[j]]["Variance"])
+            else:
+                denom *= distrib[i][header[j]][data[j]]
+        if denom > maximum:
+            maximum = denom
+            value = i
+    return value
+
+print(naive_base(distrib_param(data, header, 3), ["Gender", "Age"], ["Male", '35']))
+
+_, data_test = convert_csv2array('data_test.csv')
+print(data_test)
+
+
+FN, FP, TN, TP = range(4)
+
+def test_naive_base(distrib: dict, header: np.ndarray, data: np.ndarray):
+    if 
